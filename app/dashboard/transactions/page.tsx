@@ -1,17 +1,6 @@
-"use client";
+import TransactionsClient from "./TransactionsClient";
 
-import React, { useState } from "react";
-import TransactionDrawer from "@/components/transactions/TransactionDrawer";
-import TransactionList from "@/components/transactions/TransactionList";
-import CustomSelect from "@/components/ui/CustomSelect";
-import { Search, Filter, RefreshCw } from "lucide-react";
-import { Transaction, FilterParams } from "@/lib/api/client";
-import SendPaymentModal from "@/components/transactions/SendPaymentModal";
-import { AnimatePresence } from "framer-motion";
-import { useWallet } from "@/hooks/useWallet";
-import { setCategory } from "@/lib/stellar/categoriesContract";
-import { triggerNotification } from "@/lib/stellar/budgetContract";
-
+export const metadata = { title: 'Transactions | StellarSpend' };
 
 export default function TransactionsPage() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
@@ -137,7 +126,10 @@ export default function TransactionsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl hover:bg-white/[0.08] hover:border-white/20 transition-all active:scale-95 group">
+            <button
+              type="button"
+              aria-label="Refresh transactions"
+              className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl hover:bg-white/[0.08] hover:border-white/20 transition-all active:scale-95 group">
               <RefreshCw className="w-5 h-5 text-[#7a8aaa] group-hover:text-white transition-colors" />
             </button>
             <button
@@ -156,7 +148,7 @@ export default function TransactionsPage() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7a8aaa] group-focus-within:text-[#e8b84b] transition-colors" />
               <input
                 type="text"
-                placeholder="Search by hash, memo or address..."
+                placeholder="Search by address or memo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => {
@@ -169,6 +161,7 @@ export default function TransactionsPage() {
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
+              aria-label={showFilters ? "Hide filters" : "Show filters"}
               className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold transition-all uppercase tracking-widest text-[10px] ${
                 showFilters
                   ? "bg-[#e8b84b]/10 border border-[#e8b84b]/30 text-[#e8b84b]"

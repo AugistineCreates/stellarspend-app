@@ -36,6 +36,14 @@ const NAV_LINKS: NavLink[] = [
 ];
 
 // ── Logo ──────────────────────────────────────────────────────────────────────
+/**
+ * StellarSpend brand mark shown in the header and the mobile drawer.
+ *
+ * Renders a link to `/` containing the gold star glyph and the
+ * "StellarSpend" wordmark, with a visible keyboard focus ring.
+ *
+ * @returns The logo element, wrapped in a home {@link Link}.
+ */
 function Logo() {
   return (
     <Link
@@ -68,6 +76,18 @@ function Logo() {
 }
 
 // ── Wallet connect button ─────────────────────────────────────────────────────
+/**
+ * Freighter wallet connect/disconnect control.
+ *
+ * Disconnected: a "Connect Wallet" button that shows a spinner while
+ * connecting and surfaces any wallet error beneath it. Connected: the
+ * shortened public key with a dropdown offering copy-to-clipboard and
+ * disconnect. The dropdown closes when clicking outside of it.
+ *
+ * @param mobile - Applies full-width styles for use inside the mobile
+ *   navigation drawer.
+ * @returns The wallet button, plus its dropdown menu when connected.
+ */
 function WalletButton({ mobile = false }: { mobile?: boolean }) {
   const { freighter, connectFreighter, disconnectFreighter, formatAddress } =
     useWallet();
@@ -358,7 +378,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              aria-label="Open navigation menu"
+              aria-label="Open menu"
               aria-expanded={mobileOpen}
               aria-controls="mobile-drawer"
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-gray-600 dark:text-[#94a3b8] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-white/[0.06] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8b84b]"
@@ -399,7 +419,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            aria-label="Close navigation menu"
+            aria-label="Close menu"
             className="flex items-center justify-center w-9 h-9 rounded-lg text-gray-600 dark:text-[#94a3b8] hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-white/[0.06] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8b84b]"
           >
             <X size={20} aria-hidden="true" />

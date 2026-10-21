@@ -18,12 +18,16 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+/** How often a recurring payment schedule executes. */
 export type Frequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
+/** Lifecycle state of a recurring payment schedule. */
 export type ScheduleStatus = 'active' | 'paused' | 'cancelled' | 'completed';
 
+/** Outcome of a single recurring payment execution attempt. */
 export type ExecutionResult = 'success' | 'skipped' | 'failed';
 
+/** A recurring payment schedule owned by a Stellar account. */
 export interface RecurringPayment {
   id: string;
   owner: string;
@@ -40,6 +44,7 @@ export interface RecurringPayment {
   createdAt: number;
 }
 
+/** A record of a single recurring payment execution attempt. */
 export interface ExecutionRecord {
   scheduleId: string;
   result: ExecutionResult;
@@ -59,6 +64,10 @@ const LOCAL_EXECUTIONS_KEY = 'stellarspend_recurring_executions';
 
 // ── Mock / fallback storage ───────────────────────────────────────────────────
 
+/**
+ * Reads recurring payment schedules cached in localStorage for the offline/mock fallback.
+ * @returns The cached schedules, or an empty array when none are stored.
+ */
 function getMockSchedules(): RecurringPayment[] {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(LOCAL_SCHEDULES_KEY);
@@ -72,12 +81,24 @@ function getMockSchedules(): RecurringPayment[] {
   return [];
 }
 
+/**
+ * Persists recurring payment schedules to localStorage for offline/mock mode.
+ *
+ * @param schedules - The recurring payment schedules to store.
+ * @returns Nothing.
+ */
 function setMockSchedules(schedules: RecurringPayment[]) {
   if (typeof window !== 'undefined') {
     localStorage.setItem(LOCAL_SCHEDULES_KEY, JSON.stringify(schedules));
   }
 }
 
+/**
+ * Retrieves locally cached recurring payment execution records for offline/mock mode.
+ *
+ * @returns The stored execution records, or an empty array if running
+ *   outside the browser, no records are stored, or the stored JSON is invalid.
+ */
 function getMockExecutions(): ExecutionRecord[] {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(LOCAL_EXECUTIONS_KEY);
@@ -91,12 +112,22 @@ function getMockExecutions(): ExecutionRecord[] {
   return [];
 }
 
+/**
+ * Persists execution records to localStorage for the offline/mock fallback.
+ * @param executions - The execution records to store.
+ */
 function setMockExecutions(executions: ExecutionRecord[]) {
   if (typeof window !== 'undefined') {
     localStorage.setItem(LOCAL_EXECUTIONS_KEY, JSON.stringify(executions));
   }
 }
 
+/**
+ * Adds a number of days to a date string.
+ * @param dateStr - The starting date (YYYY-MM-DD).
+ * @param days - The number of days to add.
+ * @returns The resulting date (YYYY-MM-DD).
+ */
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr);
   d.setDate(d.getDate() + days);
@@ -107,6 +138,10 @@ function addDays(dateStr: string, days: number): string {
 
 /**
  * Creates a new recurring payment schedule on-chain (or locally).
+ * @param publicKey - The Stellar public key of the schedule owner.
+ * @param params - The recipient, amount, asset, frequency, dates, and execution limit for the schedule.
+ * @param statusCallback - Optional callback for transaction status updates.
+ * @returns The newly created recurring payment schedule.
  */
 export async function createRecurringPayment(
   publicKey: string,
@@ -192,6 +227,8 @@ export async function createRecurringPayment(
 
 /**
  * Fetches all recurring payment schedules for the given account.
+ * @param publicKey - The Stellar public key of the account whose schedules to fetch.
+ * @returns An array of recurring payment schedules owned by the account.
  */
 export async function fetchRecurringPayments(
   publicKey: string,
@@ -243,6 +280,10 @@ export async function fetchRecurringPayments(
 /**
  * Manually triggers execution of a due schedule (calls `execute_due`).
  * This is permissionless per the contract design.
+ * @param publicKey - The Stellar public key of the account submitting the transaction.
+ * @param scheduleId - The ID of the schedule to execute.
+ * @param statusCallback - Optional callback for transaction status updates.
+ * @returns The execution record for the attempted schedule execution.
  */
 export async function executeScheduleNow(
   publicKey: string,
@@ -324,6 +365,9 @@ export async function executeScheduleNow(
 
 /**
  * Pauses a recurring payment schedule.
+ * @param publicKey - The Stellar public key of the schedule owner.
+ * @param scheduleId - The ID of the schedule to pause.
+ * @returns Nothing; the schedule is updated when the operation completes.
  */
 export async function pauseSchedule(
   publicKey: string,
@@ -351,6 +395,9 @@ export async function pauseSchedule(
 
 /**
  * Resumes a paused recurring payment schedule.
+ * @param publicKey - The Stellar public key of the schedule owner.
+ * @param scheduleId - The ID of the schedule to resume.
+ * @returns Nothing; the schedule is updated when the operation completes.
  */
 export async function resumeSchedule(
   publicKey: string,
@@ -378,6 +425,9 @@ export async function resumeSchedule(
 
 /**
  * Cancels a recurring payment schedule.
+ * @param publicKey - The Stellar public key of the schedule owner.
+ * @param scheduleId - The ID of the schedule to cancel.
+ * @returns Nothing; the schedule is updated when the operation completes.
  */
 export async function cancelSchedule(
   publicKey: string,
@@ -405,6 +455,8 @@ export async function cancelSchedule(
 
 /**
  * Fetches execution history for a given schedule.
+ * @param scheduleId - The ID of the schedule whose execution history to fetch.
+ * @returns An array of execution records for the schedule.
  */
 export async function fetchExecutionHistory(
   scheduleId: string,
@@ -444,6 +496,12 @@ export async function fetchExecutionHistory(
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 
+/**
+ * Computes the next due date by adding the interval for `frequency` to `currentDue`.
+ * @param currentDue - The current due date (YYYY-MM-DD).
+ * @param frequency - How often the schedule repeats.
+ * @returns The next due date (YYYY-MM-DD).
+ */
 function computeNextDueDate(currentDue: string, frequency: Frequency): string {
   switch (frequency) {
     case 'daily':

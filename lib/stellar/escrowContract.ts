@@ -21,6 +21,10 @@ const ESCROW_CONTRACT_ID = process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ID ?? '';
 const LOCAL_SPLITS_KEY = 'stellarspend_local_splits';
 const POLL_INTERVAL_MS = 4000;
 
+/**
+ * Reads the split bills cached in localStorage for the offline/mock fallback.
+ * @returns The cached split bills, or an empty array when none are stored.
+ */
 function getMockSplits(): SplitBill[] {
   if (typeof window === 'undefined') return [];
   const stored = localStorage.getItem(LOCAL_SPLITS_KEY);
@@ -33,6 +37,10 @@ function getMockSplits(): SplitBill[] {
   }
 }
 
+/**
+ * Persists split bills to localStorage and notifies split listeners.
+ * @param splits - The split bills to store.
+ */
 function setMockSplits(splits: SplitBill[]) {
   if (typeof window === 'undefined') return;
   localStorage.setItem(LOCAL_SPLITS_KEY, JSON.stringify(splits));
@@ -40,6 +48,44 @@ function setMockSplits(splits: SplitBill[]) {
   window.dispatchEvent(new CustomEvent('stellarspend_split_update'));
 }
 
+/**
+ * Last-modified marker for a split bill (Issue #115).
+ * Falls back to the creation time for splits saved before the marker existed.
+ * @param split - The split bill to read the marker from.
+ * @returns An ISO timestamp identifying the split's current revision.
+ */
+export function getSplitVersion(split: Pick<SplitBill, 'updatedAt' | 'createdAt'>): string {
+  return split.updatedAt ?? split.createdAt;
+}
+
+/**
+ * Applies a partial update to a locally-cached split bill and stamps its
+ * last-modified marker, so a replaying offline edit can be compared against it.
+ * @param splitId - The ID of the split bill to update.
+ * @param changes - The split fields to change.
+ * @returns The updated split bill, or null when no split has that ID.
+ */
+export function updateSplitLocal(
+  splitId: string,
+  changes: Partial<SplitBill>,
+): SplitBill | null {
+  const splits = getMockSplits();
+  const index = splits.findIndex((s) => s.id === splitId);
+  if (index === -1) return null;
+  splits[index] = {
+    ...splits[index],
+    ...changes,
+    updatedAt: new Date().toISOString(),
+  };
+  setMockSplits(splits);
+  return splits[index];
+}
+
+/**
+ * Builds the per-participant shares for a new split bill.
+ * @param input - The split description, participants, amounts, and split method.
+ * @returns The shares to collect, each initially pending.
+ */
 function buildShares(input: CreateSplitInput): SplitShare[] {
   if (input.method === 'even') {
     const evenAmount = Math.round((input.totalAmount / input.participants.length) * 100) / 100;
@@ -56,11 +102,23 @@ function buildShares(input: CreateSplitInput): SplitShare[] {
   }));
 }
 
+/**
+ * Checks whether every share of a split bill has been paid.
+ * @param split - The split bill to check.
+ * @returns True when all shares are paid, otherwise false.
+ */
 function isFullyCollected(split: SplitBill): boolean {
   return split.shares.every((s) => s.status === 'paid');
 }
 
-/** Creates a split bill and its escrow entries. Requester pays nothing up front. */
+/**
+ * Creates a split bill and its escrow entries. Requester pays nothing up front.
+ *
+ * @param creatorPublicKey - Public key of the requester creating the split.
+ * @param input - Split description, participants, amounts, and asset details.
+ * @param statusCallback - Optional callback for transaction status updates.
+ * @returns The newly created split bill.
+ */
 export async function createSplit(
   creatorPublicKey: string,
   input: CreateSplitInput,
@@ -80,6 +138,7 @@ export async function createSplit(
       shares,
       status: 'collecting',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     const splits = getMockSplits();
     splits.push(split);
@@ -115,6 +174,7 @@ export async function createSplit(
       status: 'collecting',
       escrowAccount: escrowAccount ?? undefined,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     // Mirror into local cache so fetchSplit/subscribeToSplit have a fast
@@ -130,7 +190,14 @@ export async function createSplit(
   }
 }
 
-/** Pays the calling participant's share into escrow, targeting the escrow contract. */
+/**
+ * Pays the calling participant's share into escrow, targeting the escrow contract.
+ *
+ * @param participantPublicKey - Public key of the participant making payment.
+ * @param splitId - Identifier of the split bill to pay.
+ * @param statusCallback - Optional callback for transaction status updates.
+ * @returns The updated split bill.
+ */
 export async function paySplitShare(
   participantPublicKey: string,
   splitId: string,
@@ -170,6 +237,7 @@ export async function paySplitShare(
   share.status = 'paid';
   share.paidAt = new Date().toISOString();
   share.transactionHash = txHash;
+  split.updatedAt = new Date().toISOString();
 
   if (isFullyCollected(split)) {
     await releaseSplitFunds(split, statusCallback);
@@ -180,7 +248,13 @@ export async function paySplitShare(
   return split;
 }
 
-/** Releases collected funds to the requester once every share has been paid. */
+/**
+ * Releases collected funds to the requester once every share has been paid.
+ *
+ * @param split - Split bill whose collected funds should be released.
+ * @param statusCallback - Optional callback for transaction status updates.
+ * @returns A promise that resolves when the funds have been released.
+ */
 async function releaseSplitFunds(
   split: SplitBill,
   statusCallback?: (status: string) => void,
@@ -206,10 +280,19 @@ async function releaseSplitFunds(
 
   split.status = 'released';
   split.releasedAt = new Date().toISOString();
+  split.updatedAt = new Date().toISOString();
   triggerNotification('success', `Split "${split.description}" fully collected — funds released to requester.`);
 }
 
-/** Routes a participant's disputed share into the escrow contract's dispute/arbitration path. */
+/**
+ * Routes a participant's disputed share into the escrow contract's dispute/arbitration path.
+ *
+ * @param participantPublicKey - Public key of the participant filing the dispute.
+ * @param splitId - Identifier of the split bill containing the disputed share.
+ * @param reason - Explanation for the dispute.
+ * @param statusCallback - Optional callback for transaction status updates.
+ * @returns The updated split bill.
+ */
 export async function disputeSplitShare(
   participantPublicKey: string,
   splitId: string,
@@ -244,6 +327,7 @@ export async function disputeSplitShare(
   share.status = 'disputed';
   share.disputeReason = reason;
   split.status = 'disputed';
+  split.updatedAt = new Date().toISOString();
 
   splits[index] = split;
   setMockSplits(splits);
@@ -251,6 +335,13 @@ export async function disputeSplitShare(
   return split;
 }
 
+/**
+ * Fetches one split bill from the contract or local cache.
+ *
+ * @param splitId - Identifier of the split bill to fetch.
+ * @param requesterPublicKey - Public key used to read the contract.
+ * @returns The matching split bill, or null when it cannot be found.
+ */
 export async function fetchSplit(splitId: string, requesterPublicKey: string): Promise<SplitBill | null> {
   if (!ESCROW_CONTRACT_ID) {
     return getMockSplits().find((s) => s.id === splitId) ?? null;
@@ -264,7 +355,12 @@ export async function fetchSplit(splitId: string, requesterPublicKey: string): P
   }
 }
 
-/** Splits the given user created, or is a participant in, most recent first. */
+/**
+ * Lists splits the given user created or participates in, most recent first.
+ *
+ * @param publicKey - Public key of the creator or participant.
+ * @returns The user's split bills ordered by creation time.
+ */
 export async function fetchSplitsForUser(publicKey: string): Promise<SplitBill[]> {
   if (!ESCROW_CONTRACT_ID) {
     return getMockSplits()
@@ -286,6 +382,11 @@ export async function fetchSplitsForUser(publicKey: string): Promise<SplitBill[]
  * Subscribes to real-time collection-progress updates for one split.
  * Polls on an interval and also reacts instantly to same-tab mock writes
  * via the `stellarspend_split_update` event. Returns an unsubscribe fn.
+ *
+ * @param splitId - Identifier of the split bill to observe.
+ * @param requesterPublicKey - Public key used to read the contract.
+ * @param onUpdate - Callback invoked with each current split value.
+ * @returns A function that stops polling and removes event listeners.
  */
 export function subscribeToSplit(
   splitId: string,
@@ -317,6 +418,12 @@ export function subscribeToSplit(
   };
 }
 
+/**
+ * Calculates how many shares in a split bill have been paid.
+ *
+ * @param split - Split bill whose collection progress should be calculated.
+ * @returns Counts of paid shares and total shares.
+ */
 export function collectionProgress(split: SplitBill): { paid: number; total: number } {
   return {
     paid: split.shares.filter((s) => s.status === 'paid').length,
