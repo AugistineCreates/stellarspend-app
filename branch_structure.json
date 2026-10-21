@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "fix/issue-600-add-doc-to-components-offline-actionhandlers-ts",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "fix/issue-600-add-doc-to-components-offline-actionhandlers-ts": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "fix/issue-600-add-doc-to-components-offline-actionhandlers-ts",
+    "origin"
+  ]
+}
