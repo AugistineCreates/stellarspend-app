@@ -102,6 +102,24 @@ export interface Transaction {
   }[];
 }
 
+/**
+ * Represents a spending budget defined by a user or shared across multiple
+ * wallet owners on the StellarSpend platform.
+ *
+ * @property id - Unique identifier for the budget record.
+ * @property name - Human-readable label for the budget (e.g. "Groceries").
+ * @property amount - Maximum spend allowed, expressed in the budget's asset units.
+ * @property category - Spending category the budget applies to (e.g. "Food", "Travel").
+ * @property asset - The Stellar asset the budget is denominated in (`XLM`, `USDC`, or `EURC`).
+ * @property startDate - ISO-8601 date string marking the beginning of the budget period.
+ * @property endDate - ISO-8601 date string marking the end of the budget period.
+ * @property createdAt - ISO-8601 timestamp of when the budget was first created.
+ * @property updatedAt - ISO-8601 timestamp of the most recent modification.
+ * @property ownerAddress - Stellar address of the wallet that created the budget (shared budgets only).
+ * @property coOwners - Additional Stellar addresses that share ownership, excluding the owner (shared budgets only).
+ * @property approvalThreshold - Number of co-owner approvals required before a change is applied (shared budgets only).
+ * @property isShared - `true` when the budget requires co-owner approval for changes.
+ */
 export interface Budget {
   id: string;
   name: string;
@@ -121,6 +139,18 @@ export interface Budget {
   /** True when the budget requires co-owner approval for changes. */
   isShared?: boolean;
 }
+/**
+ * Query parameters used to filter a list of transactions returned by the API.
+ *
+ * All fields are optional — omitting a field means no filtering is applied for
+ * that dimension.
+ *
+ * @property dateFrom - ISO-8601 date string; only transactions on or after this date are returned.
+ * @property dateTo - ISO-8601 date string; only transactions on or before this date are returned.
+ * @property asset - Stellar asset code to filter by (e.g. `"XLM"`, `"USDC"`, `"EURC"`).
+ * @property type - Direction of the transaction: `"in"` for received, `"out"` for sent, `"all"` for both.
+ * @property search - Free-text search string matched against transaction memos or counterparty addresses.
+ */
 export interface FilterParams {
   dateFrom?: string;
   dateTo?: string;

@@ -25,6 +25,24 @@ interface LanguageSelectorProps {
   className?: string;
 }
 
+/**
+ * A UI component that allows users to select their preferred interface language.
+ *
+ * Supports two display variants:
+ * - `"dropdown"` (default): a compact `<select>` element with a globe icon, suitable
+ *   for navigation bars or toolbars.
+ * - `"list"`: a grid of animated buttons, one per supported language, with the
+ *   currently active language highlighted. Intended for settings pages.
+ *
+ * The selected language is read from and persisted via the {@link useI18n} context.
+ * Right-to-left layout is applied automatically when Arabic is selected.
+ *
+ * @param props - Component props.
+ * @param props.variant - Display style: `"dropdown"` for a compact select, or `"list"`
+ *   for an expanded button grid. Defaults to `"dropdown"`.
+ * @param props.className - Optional additional CSS class names to apply to the root element.
+ * @returns A React element rendering the language selector in the requested variant.
+ */
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   variant = "dropdown",
   className = "",

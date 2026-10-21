@@ -11,6 +11,12 @@ import { createBudget, isBudgetContractConfigured } from "@/lib/stellar/budgetCo
 import type { Budget } from "@/lib/api/client";
 
 // ─── Mini Receive Modal ──────────────────────────────────────────────────────
+/**
+ * Displays the wallet receive dialog with the account address and copy action.
+ *
+ * @param onClose - Callback that closes the receive dialog.
+ * @returns The receive-assets modal.
+ */
 function ReceiveModal({ onClose }: { onClose: () => void }) {
   const address = "GDQD6A4P422X44QW6UXO6R6AOTHOV4C6A4P422X44QW6UXO6R6AOTHO";
   const [copied, setCopied] = useState(false);
@@ -74,6 +80,12 @@ function ReceiveModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Budget / Goal Modals ────────────────────────────────────────────────────
+/**
+ * Displays the form for creating a monthly spending budget.
+ *
+ * @param onClose - Callback that closes the budget dialog.
+ * @returns The new-budget modal.
+ */
 function BudgetModal({ onClose }: { onClose: () => void }) {
   const { freighter } = useWallet();
   const publicKey = freighter.publicKey;

@@ -273,6 +273,13 @@ function normalizeSharedBudget(raw: Record<string, unknown>): SharedBudget | nul
   return budget;
 }
 
+/**
+ * Normalizes a raw on-chain pending change record into a `PendingBudgetChange`.
+ * Accepts both snake_case and camelCase keys and fills in defaults for missing fields.
+ *
+ * @param raw - The raw record returned by the contract.
+ * @returns The normalized pending change, or `null` if the record has no string `id`.
+ */
 function normalizePendingChange(raw: Record<string, unknown>): PendingBudgetChange | null {
   const id = raw.id;
   if (typeof id !== 'string') return null;
