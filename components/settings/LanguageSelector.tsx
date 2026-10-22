@@ -23,6 +23,8 @@ const languages: LanguageOption[] = [
 interface LanguageSelectorProps {
   variant?: "dropdown" | "list";
   className?: string;
+  /** Overrides the default `data-testid` on the list wrapper ("language-list"). */
+  listTestId?: string;
 }
 
 /**
@@ -46,6 +48,7 @@ interface LanguageSelectorProps {
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
   variant = "dropdown",
   className = "",
+  listTestId = "language-list",
 }) => {
   const { language, changeLanguage, isRTL } = useI18n();
 
@@ -59,7 +62,7 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
 
   if (variant === "list") {
     return (
-      <div className={`space-y-2 ${className}`} data-testid="language-list">
+      <div className={`space-y-2 ${className}`} data-testid={listTestId}>
         <div className="flex items-center gap-2 text-[#e8b84b] mb-4">
           <Globe className="w-5 h-5" />
           <h3 className="text-lg font-semibold">Language Preferences</h3>

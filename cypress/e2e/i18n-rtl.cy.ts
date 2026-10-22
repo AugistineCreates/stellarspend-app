@@ -11,6 +11,10 @@
 describe("i18n & RTL (#17)", () => {
   const LANGUAGE_KEY = "stellarspend_language";
 
+  // Unique testid on the settings-page list variant so it is never ambiguous,
+  // even while React concurrent transitions keep both old and new trees in DOM.
+  const LIST = '[data-testid="language-list-settings"]';
+
   beforeEach(() => {
     cy.visit("/dashboard/settings");
     // Reset the persisted language so tests are independent of each other
@@ -20,11 +24,9 @@ describe("i18n & RTL (#17)", () => {
   });
 
   it("switches to Arabic and mirrors the layout to RTL", () => {
-    // List variant on the settings page exposes each language as a button
-    // with a unique data-testid of the form "language-btn-{code}". Scope to
-    // the list container so the selector is unambiguous even if a second
-    // language UI is in the DOM.
-    cy.get('[data-testid="language-list"]').within(() => {
+    // Wait for exactly one list container before scoping into it, so a stale
+    // ghost left by a concurrent React transition can't make .within() fail.
+    cy.get(LIST).should("have.length", 1).within(() => {
       cy.get('[data-testid="language-btn-ar"]').click();
     });
 
@@ -41,7 +43,7 @@ describe("i18n & RTL (#17)", () => {
   });
 
   it("persists the language choice across a reload", () => {
-    cy.get('[data-testid="language-list"]').within(() => {
+    cy.get(LIST).should("have.length", 1).within(() => {
       cy.get('[data-testid="language-btn-ar"]').click();
     });
     cy.get("html").should("have.attr", "dir", "rtl");
@@ -50,18 +52,20 @@ describe("i18n & RTL (#17)", () => {
 
     cy.get("html").should("have.attr", "dir", "rtl");
     cy.get("html").should("have.attr", "lang", "ar");
-    cy.get('[data-testid="language-list"]')
+    cy.get(LIST)
+      .should("have.length", 1)
       .find('[data-testid="language-btn-ar"]')
       .should("have.class", "border-[#e8b84b]");
   });
 
   it("switches back to English (LTR)", () => {
-    cy.get('[data-testid="language-list"]').within(() => {
+    cy.get(LIST).should("have.length", 1).within(() => {
       cy.get('[data-testid="language-btn-ar"]').click();
     });
     cy.get("html").should("have.attr", "dir", "rtl");
 
-    cy.get('[data-testid="language-list"]').within(() => {
+    // Wait for exactly one list (concurrent transition clears) then click English
+    cy.get(LIST).should("have.length", 1).within(() => {
       cy.get('[data-testid="language-btn-en"]').click();
     });
     cy.get("html").should("have.attr", "dir", "ltr");
