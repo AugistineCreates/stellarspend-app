@@ -73,12 +73,37 @@ export interface AssetBalance {
   change24h: number; // percent
 }
 
+/**
+ * Aggregated balance snapshot for a connected Stellar wallet.
+ *
+ * @property balances - Per-asset balance entries (XLM, USDC, EURC) with USD valuations.
+ * @property totalUsd - Combined portfolio value across all assets, in USD.
+ * @property updatedAt - ISO-8601 timestamp of when the snapshot was last refreshed.
+ */
 export interface WalletBalances {
   balances: AssetBalance[];
   totalUsd: number;
   updatedAt: string;
 }
 
+/**
+ * A Stellar blockchain transaction with its embedded operations, as returned
+ * by the Horizon-based API.
+ *
+ * @property id - Unique transaction identifier assigned by Stellar Horizon.
+ * @property hash - Transaction hash on the Stellar ledger.
+ * @property created_at - ISO-8601 timestamp of when the transaction was submitted.
+ * @property memo - Attachment memo attached to the transaction.
+ * @property memo_type - Optional memo format (e.g. `text`, `id`, `hash`).
+ * @property successful - `true` when the transaction applied successfully on-chain.
+ * @property status - Optional local lifecycle state: `pending`, `confirmed`, or `failed`.
+ * @property fee_charged - Fee actually charged for the transaction, in stroops.
+ * @property max_fee - Maximum fee the source account was willing to pay, in stroops.
+ * @property operation_count - Number of operations contained in the transaction.
+ * @property source_account - Stellar address of the account that submitted the transaction.
+ * @property ledger - Ledger sequence number in which the transaction was applied.
+ * @property operations - Ordered list of operations in the transaction (payment details included).
+ */
 export interface Transaction {
   id: string;
   hash: string;
