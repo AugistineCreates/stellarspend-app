@@ -47,6 +47,18 @@ interface LocalWallet {
   publicKey?: string;
 }
 
+/**
+ * Resolves the Stellar public key of the wallet the user currently has
+ * selected in the app.
+ *
+ * The value is read from `localStorage` (`stellarspend_selected_wallet` and
+ * `stellarspend_wallets`), which the wallet context keeps in sync. Callers
+ * use it to scope on-chain reads and writes to the active account.
+ *
+ * @returns The Stellar public key (e.g. `GABC...`) of the selected wallet, or
+ * `null` when running on the server, when no wallet is selected, or when the
+ * stored wallet list cannot be parsed.
+ */
 export function getConnectedPublicKey(): string | null {
   if (typeof window === 'undefined') return null;
   const selectedWalletId = localStorage.getItem('stellarspend_selected_wallet');
@@ -66,6 +78,14 @@ export function getConnectedPublicKey(): string | null {
 }
 
 
+/**
+ * A single asset holding within a wallet balance snapshot.
+ *
+ * @property asset - Asset code the holding is denominated in (`XLM`, `USDC`, or `EURC`).
+ * @property balance - Amount held, as a decimal string (e.g. `"4210.50"`).
+ * @property usdValue - Approximate value of the holding in USD.
+ * @property change24h - Percentage change in the asset's price over the last 24 hours.
+ */
 export interface AssetBalance {
   asset: "XLM" | "USDC" | "EURC";
   balance: string;
