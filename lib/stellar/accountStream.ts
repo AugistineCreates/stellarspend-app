@@ -88,6 +88,11 @@ export interface AccountStreamState {
 }
 
 export type AccountStreamListener = (event: AccountStreamEvent) => void;
+/**
+ * Callback invoked with the latest stream state whenever the account stream
+ * status changes (e.g. connecting, connected, reconnecting, disconnected).
+ * @param state - The current stream status and active account.
+ */
 export type AccountStreamStatusListener = (state: AccountStreamState) => void;
 
 // ── Manager ─────────────────────────────────────────────────────────────────
@@ -103,6 +108,10 @@ class AccountStreamManager {
   private stopPayments: (() => void) | null = null;
   private readonly listeners = new Set<AccountStreamListener>();
   private readonly statusListeners = new Set<AccountStreamStatusListener>();
+  /**
+   * Returns the current stream status and the account it is bound to.
+   * @returns The current `AccountStreamState` (`status` and `account`).
+   */
 
   getState(): AccountStreamState {
     return { status: this.status, account: this.activeAccount };
