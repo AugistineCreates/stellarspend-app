@@ -21,8 +21,12 @@ describe("i18n & RTL (#17)", () => {
 
   it("switches to Arabic and mirrors the layout to RTL", () => {
     // List variant on the settings page exposes each language as a button
-    // tagged with its BCP-47 code.
-    cy.get('button[lang="ar"]').click();
+    // with a unique data-testid of the form "language-btn-{code}". Scope to
+    // the list container so the selector is unambiguous even if a second
+    // language UI is in the DOM.
+    cy.get('[data-testid="language-list"]').within(() => {
+      cy.get('[data-testid="language-btn-ar"]').click();
+    });
 
     cy.get("html").should("have.attr", "dir", "rtl");
     cy.get("html").should("have.attr", "lang", "ar");
@@ -37,21 +41,29 @@ describe("i18n & RTL (#17)", () => {
   });
 
   it("persists the language choice across a reload", () => {
-    cy.get('button[lang="ar"]').click();
+    cy.get('[data-testid="language-list"]').within(() => {
+      cy.get('[data-testid="language-btn-ar"]').click();
+    });
     cy.get("html").should("have.attr", "dir", "rtl");
 
     cy.reload();
 
     cy.get("html").should("have.attr", "dir", "rtl");
     cy.get("html").should("have.attr", "lang", "ar");
-    cy.get('button[lang="ar"]').should("have.class", "border-[#e8b84b]");
+    cy.get('[data-testid="language-list"]')
+      .find('[data-testid="language-btn-ar"]')
+      .should("have.class", "border-[#e8b84b]");
   });
 
   it("switches back to English (LTR)", () => {
-    cy.get('button[lang="ar"]').click();
+    cy.get('[data-testid="language-list"]').within(() => {
+      cy.get('[data-testid="language-btn-ar"]').click();
+    });
     cy.get("html").should("have.attr", "dir", "rtl");
 
-    cy.get('button[lang="en"]').click();
+    cy.get('[data-testid="language-list"]').within(() => {
+      cy.get('[data-testid="language-btn-en"]').click();
+    });
     cy.get("html").should("have.attr", "dir", "ltr");
     cy.get("html").should("have.attr", "lang", "en");
   });
