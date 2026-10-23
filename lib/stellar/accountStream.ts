@@ -33,6 +33,14 @@ const RECONNECT_MAX_EXPONENT = 6;
 
 // ── Public types ────────────────────────────────────────────────────────────
 
+/**
+ * The current lifecycle status of the account stream.
+ * - `idle`: No stream is active or the stream has been stopped.
+ * - `connecting`: Actively establishing connection to Horizon SSE endpoints.
+ * - `connected`: Successfully connected and receiving live events.
+ * - `reconnecting`: Connection lost and attempting to reconnect with backoff.
+ * - `disconnected`: Connection terminated unexpectedly (e.g., network error).
+ */
 export type AccountStreamStatus =
   | "idle"
   | "connecting"
@@ -64,6 +72,13 @@ export interface StreamedOperation {
   };
 }
 
+/**
+ * Event emitted when a new operation is received from the Horizon operations stream.
+ * @property kind - Event discriminator, always `"operation"`.
+ * @property account - The Stellar public key of the account this operation relates to.
+ * @property operation - The streamed Horizon operation record with minimal fields.
+ * @property receivedAt - Timestamp (ms since epoch) when the event was received by the client.
+ */
 export interface AccountStreamOperationEvent {
   kind: "operation";
   account: string;
