@@ -86,13 +86,18 @@ export interface AccountStreamOperationEvent {
   receivedAt: number;
 }
 
+/** Emitted when a payment operation is received for a watched account. */
 export interface AccountStreamPaymentEvent {
   kind: "payment";
+  /** The Stellar account address that received the payment. */
   account: string;
+  /** The streamed payment operation details. */
   payment: StreamedOperation;
+  /** Unix timestamp (ms) when the event was received. */
   receivedAt: number;
 }
 
+/** Union of all events that can be emitted by the account stream. */
 export type AccountStreamEvent =
   | AccountStreamOperationEvent
   | AccountStreamPaymentEvent;
