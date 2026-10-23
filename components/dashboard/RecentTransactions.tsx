@@ -112,6 +112,16 @@ function SkeletonRow() {
   );
 }
 
+/**
+ * Displays a dashboard preview of up to three recent transactions.
+ *
+ * Loads transactions from the API, reconciles submitted and confirmed payment
+ * events, and refreshes on Horizon account-stream activity. Includes loading and
+ * empty states, a temporary new-activity indicator, and links to the full history.
+ * This component accepts no props.
+ *
+ * @returns The recent-transactions dashboard card.
+ */
 export default function RecentTransactions() {
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
