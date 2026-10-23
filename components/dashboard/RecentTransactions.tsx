@@ -25,6 +25,15 @@ import {
   subscribeAccountStreamStatus,
 } from "@/lib/stellar/accountStream";
 
+/**
+ * Renders a single recent transaction row, showing direction, memo, date,
+ * amount, asset, and status (confirmed, pending, or failed).
+ *
+ * @param props - Component props.
+ * @param props.tx - The transaction record to display.
+ * @param props.index - Position in the list, used to stagger the entry animation.
+ * @returns The animated transaction row element.
+ */
 function TxRow({ tx, index }: { tx: Transaction; index: number }) {
   const op = tx.operations[0];
   const isOut = op?.type === "payment" && op.from?.startsWith("GDQD");
@@ -96,6 +105,12 @@ function TxRow({ tx, index }: { tx: Transaction; index: number }) {
   );
 }
 
+/**
+ * Renders a placeholder row with pulsing blocks, used while recent
+ * transactions are loading.
+ *
+ * @returns The skeleton loading row element.
+ */
 function SkeletonRow() {
   return (
     <div className="flex items-center gap-4 p-4 animate-pulse">
