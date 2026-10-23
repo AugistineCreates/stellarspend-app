@@ -150,6 +150,16 @@ function isEventTriggered(walletId: string, eventKey: string): boolean {
   return getTriggeredEvents(walletId).has(eventKey);
 }
 
+/**
+ * Creates a fresh notification state for a wallet with no history. Used as the
+ * fallback when no state is stored, the stored value cannot be parsed, or the
+ * code runs outside the browser (no `localStorage`).
+ *
+ * @param walletId - Identifier of the wallet the state belongs to.
+ * @returns A `WalletNotificationState` with `lastCheckedAt` and
+ * `lastKnownBalance` set to 0 and empty `budgetSpending` and `goalProgress`
+ * maps.
+ */
 function createEmptyState(walletId: string): WalletNotificationState {
   return {
     walletId,
