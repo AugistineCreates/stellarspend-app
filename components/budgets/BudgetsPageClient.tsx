@@ -72,13 +72,6 @@ function formatAmount(val: number): string {
   return val % 1 === 0 ? val.toString() : val.toFixed(2);
 }
 
-/**
- * Converts budget form values into the data shape used to create or update
- * an owned budget, excluding fields managed by the data layer.
- *
- * @param data - Validated values collected from the budget form.
- * @returns Budget data without its generated ID and timestamps.
- */
 function toOwnedBudgetData(data: BudgetFormData): Omit<Budget, "id" | "createdAt" | "updatedAt"> {
   return {
     name: data.name,
@@ -90,12 +83,6 @@ function toOwnedBudgetData(data: BudgetFormData): Omit<Budget, "id" | "createdAt
   };
 }
 
-/**
- * Renders the budgets page, including owned and shared budgets, budget
- * creation and editing, and pending shared-budget approvals.
- *
- * @returns The client-side budgets page.
- */
 export default function BudgetsPageClient() {
   const { freighter } = useWallet();
   const publicKey = freighter.publicKey;
